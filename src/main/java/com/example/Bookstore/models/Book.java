@@ -14,15 +14,17 @@ public class Book {
     private String author ;
     private Double price ;
     private String imageUrl;
+    private String description ;
 
     public Book() {
     }
 
-    public Book(String title, String author, Double price, String imageUrl) {
+    public Book(String title, String author, Double price, String imageUrl,String description) {
         this.title = title;
         this.author = author;
         this.price = price;
         this.imageUrl = imageUrl;
+        this.description=description ;
     }
 
     public String getTitle() {
@@ -57,13 +59,30 @@ public class Book {
         this.imageUrl = imageUrl;
     }
 
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     @Override
     public String toString() {
         return "Book{" +
                 "id=" + id +
                 ", title='" + title + '\'' +
                 ", author='" + author + '\'' +
-                ", price=" + price +
+                ", price=" + price + '\''+
+                ", description=" + description + '\''+
                 ", imageUrl='" + imageUrl + '\'' +
                 '}';
     }
