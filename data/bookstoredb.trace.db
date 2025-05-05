@@ -1,0 +1,6 @@
+2025-05-05 12:48:45.738642+01:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "BOOK" not found (this database is empty); SQL statement:
+INSERT INTO book (title, author, price, imageUrl,description) VALUES ('Spring in Action', 'Craig Walls', 39.99, 'https://example.com/img1.jpg','Comprehensive Spring Boot book.'), ('Effective Java', 'Joshua Bloch', 45.00, 'https://example.com/img2.jpg', 'Best practices for Java.') [42104-232]
+2025-05-05 12:49:03.529046+01:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "BOOK" not found (this database is empty); SQL statement:
+INSERT INTO book (title, author, price, imageUrl,description) VALUES ('Spring in Action', 'Craig Walls', 39.99, 'https://example.com/img1.jpg','Comprehensive Spring Boot book.'), ('Effective Java', 'Joshua Bloch', 45.00, 'https://example.com/img2.jpg', 'Best practices for Java.') [42104-232]
