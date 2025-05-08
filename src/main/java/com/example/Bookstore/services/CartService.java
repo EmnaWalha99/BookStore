@@ -7,17 +7,17 @@ import java.util.List;
 
 public interface CartService {
 
-    List<CartItem>  addBookToCart(String token , long bookId);
+    List<CartItem>  addBookToCart(long bookId);
 
-    List<CartItem> getCartItems(String token);
+    List<CartItem> getCartItems();
 
-    boolean removeBookFromCart(String token);
+    boolean removeBookFromCart();
 
-    int getCartItemCount(String token);
+    int getCartItemCount();
 
 
-    CartItem increaseBookQuantity(String token , Long bookId ,CartDto dto);
-    CartItem decreaseBookQuantity(String token , Long bookId , CartDto dto);
+    CartItem increaseBookQuantity(Long bookId ,CartDto dto);
+    CartItem decreaseBookQuantity(Long bookId , CartDto dto);
 
 
 
