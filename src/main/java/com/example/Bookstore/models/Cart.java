@@ -10,40 +10,25 @@ import java.util.List;
 public class Cart {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id ;
 
-    private  boolean isActive=true ;
 
-    @ManyToOne
+    @OneToOne
     @JoinColumn(name="user_id")
     private User user ;
 
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CartItem> items = new ArrayList<>();
 
+    private Double totalPrice ;
     public Cart() {
     }
 
-    public Cart(boolean isActive, User user) {
-        this.isActive = isActive;
+    public Cart(User user, List<CartItem> items, Double totalPrice) {
         this.user = user;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public boolean isActive() {
-        return isActive;
-    }
-
-    public void setActive(boolean active) {
-        isActive = active;
+        this.items = items;
+        this.totalPrice = totalPrice;
     }
 
     public Long getId() {
@@ -54,6 +39,14 @@ public class Cart {
         this.id = id;
     }
 
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
     public List<CartItem> getItems() {
         return items;
     }
@@ -62,10 +55,12 @@ public class Cart {
         this.items = items;
     }
 
-    public double getTotalPrice() {
-        return items.stream()
-                .mapToDouble(CartItem::getTotalPrice)
-                .sum();
+    public Double getTotalPrice() {
+        return totalPrice;
+    }
+
+    public void setTotalPrice(Double totalPrice) {
+        this.totalPrice = totalPrice;
     }
 }
 

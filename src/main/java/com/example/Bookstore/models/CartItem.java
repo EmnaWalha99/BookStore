@@ -14,17 +14,21 @@ public class CartItem {
     private Book book;
 
     @ManyToOne
-    @JoinColumn(name="user_id")
-    private User user;
+    @JoinColumn(name="cart_id")
+    private Cart cart;
+
 
     private int quantity ;
 
+    private  double price ;
+
     public CartItem(){}
 
-    public CartItem(Book book, User user, int quantity) {
+    public CartItem(Book book, Cart cart, int quantity, double price) {
         this.book = book;
-        this.user = user;
+        this.cart = cart;
         this.quantity = quantity;
+        this.price = price;
     }
 
     public Long getId() {
@@ -43,12 +47,12 @@ public class CartItem {
         this.book = book;
     }
 
-    public User getUser() {
-        return user;
+    public Cart getCart() {
+        return cart;
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    public void setCart(Cart cart) {
+        this.cart = cart;
     }
 
     public int getQuantity() {
@@ -59,19 +63,11 @@ public class CartItem {
         this.quantity = quantity;
     }
 
-    // Optional helper method
-    public double getTotalPrice() {
-        return book.getPrice() * quantity;
+    public double getPrice() {
+        return price;
     }
 
-    @Override
-    public String toString() {
-        return "CartItem{" +
-                "id=" + id +
-                ", book=" + book +
-                ", user=" + user +
-                ", quantity=" + quantity +
-                ", totalPrice=" + getTotalPrice() +
-                '}';
+    public void setPrice(double price) {
+        this.price = price;
     }
 }
