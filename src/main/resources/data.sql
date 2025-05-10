@@ -8,3 +8,6 @@ INSERT INTO books (title, author, price, image_url, description) VALUES
 ('To Kill a Mockingbird', 'Harper Lee', 12.90, 'https://example.com/images/mockingbird.jpg', 'Une histoire poignante sur la justice.');
 INSERT INTO books (title, author, price, image_url, description) VALUES
 ('La Peste', 'Albert Camus', 10.75, 'https://example.com/s/lapeste.jpg', 'Une réflexion sur la condition humaine.');
+
+INSERT INTO users (username, email, password) VALUES
+('user', 'user@gmail.com', 'useruser123');

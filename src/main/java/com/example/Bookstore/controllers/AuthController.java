@@ -108,7 +108,7 @@ public class AuthController {
         User user = new User();
         user.setEmail(registerRequest.getEmail());
         user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
-        user.setFullName(registerRequest.getFullName());
+        user.setUsername(registerRequest.getFullName());
         userRepository.save(user);
 
         // Redirect to login page after successful registration

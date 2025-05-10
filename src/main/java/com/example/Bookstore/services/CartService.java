@@ -7,19 +7,19 @@ import java.util.List;
 
 public interface CartService {
 
-    List<CartItem> addBookToCart(String username, Long bookId, int quantity);
+    List<CartItem> addBookToCart(Long bookId);
 
-    boolean removeBookFromCart(String username, Long bookId);
+    boolean removeBookFromCart(Long bookId);
 
-    List<CartItem> getCartItems(String username);
+    List<CartItem> getCartItems();
 
-    int getCartItemCount(String username);
+    int getCartItemCount();
 
-    CartItem increaseBookQuantity(String username, Long bookId);
+    CartItem increaseBookQuantity(Long bookId, CartDto dto);
 
-    CartItem decreaseBookQuantity(String username, Long bookId);
+    CartItem decreaseBookQuantity(Long bookId, CartDto dto);
 
-    void clearCart(String username);
+    void clearCart();
 
 
 
