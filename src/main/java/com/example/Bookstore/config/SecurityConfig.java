@@ -24,7 +24,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests((requests) -> requests
                         .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()  // Allow public access to auth routes
                         .requestMatchers("/h2-console/**").permitAll()  // Allow public access to H2 console
-                        .requestMatchers("/api/cart/**", "/books/**").authenticated()  // Protected routes, need authentication
+                        .requestMatchers("/api/cart/**", "/books/**").permitAll()  // Protected routes, need authentication
                         .anyRequest().authenticated()  // Other routes are protected
                 )
                 .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable())) // For H2 console

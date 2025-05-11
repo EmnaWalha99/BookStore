@@ -1,5 +1,7 @@
 package com.example.Bookstore.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
@@ -16,9 +18,11 @@ public class Cart {
 
     @OneToOne
     @JoinColumn(name="user_id")
+    @JsonIgnore
     private User user ;
 
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private List<CartItem> items = new ArrayList<>();
 
     private Double totalPrice ;
