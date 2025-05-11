@@ -1,9 +1,7 @@
 package com.example.Bookstore.controllers;
 
-import com.example.Bookstore.dto.CartDto;
 import com.example.Bookstore.models.CartItem;
 import com.example.Bookstore.services.CartService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,10 +9,14 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/cart")
+@CrossOrigin(origins = "*")
 public class CartController {
 
-    @Autowired
-    private CartService cartService;
+    private final CartService cartService;
+
+    public CartController(CartService cartService) {
+        this.cartService = cartService;
+    }
 
     @PostMapping("/add/{bookId}")
     public ResponseEntity<List<CartItem>> addBookToCart(@PathVariable Long bookId) {
@@ -39,15 +41,13 @@ public class CartController {
     }
 
     @PutMapping("/increase/{bookId}")
-    public ResponseEntity<CartItem> increaseQuantity(@PathVariable Long bookId, @RequestBody CartDto dto) {
-        return ResponseEntity.ok(cartService.increaseBookQuantity(bookId, dto));
+    public ResponseEntity<CartItem> increaseQuantity(@PathVariable Long bookId) {
+        return ResponseEntity.ok(cartService.increaseBookQuantity(bookId));
     }
 
     @PutMapping("/decrease/{bookId}")
-    public ResponseEntity<CartItem> decreaseQuantity(@PathVariable Long bookId, @RequestBody CartDto dto) {
-        return ResponseEntity.ok(cartService.decreaseBookQuantity(bookId, dto));
-
-
+    public ResponseEntity<CartItem> decreaseQuantity(@PathVariable Long bookId) {
+        return ResponseEntity.ok(cartService.decreaseBookQuantity(bookId));
     }
 
     @DeleteMapping("/clear")

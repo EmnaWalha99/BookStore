@@ -1,117 +1,92 @@
 package com.example.Bookstore.controllers;
 
-import com.example.Bookstore.dto.AuthResponse;
+import com.example.Bookstore.dto.AuthRelationDTO;
 import com.example.Bookstore.dto.LoginRequest;
 import com.example.Bookstore.dto.RegisterRequest;
 import com.example.Bookstore.models.User;
 import com.example.Bookstore.repositories.UserRepository;
-import com.example.Bookstore.security.JwtTokenProvider;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.stereotype.Controller;
-
-
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Size;
-import java.util.List;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.*;
 
-@Controller
-@RequestMapping("/auth")
+@RestController
+@RequestMapping("/api/auth")
+@CrossOrigin(origins = "*")
 public class AuthController {
 
-    private final AuthenticationManager authenticationManager;
-    private final JwtTokenProvider tokenProvider;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public AuthController(AuthenticationManager authenticationManager,
-                          JwtTokenProvider tokenProvider,
-                          UserRepository userRepository,
-                          PasswordEncoder passwordEncoder) {
-        this.authenticationManager = authenticationManager;
-        this.tokenProvider = tokenProvider;
+    public AuthController(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
-    // Show register page (GET request)
-    @GetMapping("/login")
-    public String showLoginPage() {
-        return "login"; // Return the name of the register.html view
-    }
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
+        if (userRepository.existsByEmail(request.getEmail())) {
+            return ResponseEntity.badRequest().body("Email already in use");
+        }
+        if (!request.isPasswordMatching()) {
+            return ResponseEntity.badRequest().body("Passwords do not match");
+        }
 
-    // Show register page (GET request)
-    @GetMapping("/register")
-    public String showRegisterPage() {
-        return "register"; // Return the name of the register.html view
+        User user = new User();
+        user.setUsername(request.getEmail()); // Set username as email for UserDetails
+        user.setUsername(request.getFullName());
+        user.setEmail(request.getEmail());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        userRepository.save(user);
+
+        return ResponseEntity.ok(mapToAuthRelationDTO(user));
     }
 
     @PostMapping("/login")
-    public String login(@Valid LoginRequest loginRequest, BindingResult bindingResult, Model model) {
-        if (bindingResult.hasErrors()) {
-            List<FieldError> errors = bindingResult.getFieldErrors();
-            StringBuilder errorMessage = new StringBuilder();
-            for (FieldError error : errors) {
-                errorMessage.append(error.getField())
-                        .append(": ")
-                        .append(error.getDefaultMessage())
-                        .append(" ");
-            }
-            model.addAttribute("error", errorMessage.toString());
-            return "login"; // Return to login page with error message
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request, HttpSession session) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElse(null);
+        if (user == null || !passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            return ResponseEntity.badRequest().body("Invalid email or password");
         }
 
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        loginRequest.getEmail(), loginRequest.getPassword()
-                )
+        // Store user in session for CartController compatibility
+        session.setAttribute("user", user);
+
+        // Set authentication in Spring Security's SecurityContextHolder
+        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                user, null, user.getAuthorities()
         );
-        String jwt = tokenProvider.generateToken(authentication);
-        model.addAttribute("token", jwt); // Add JWT to the model
-        return "home"; // Redirect to home page after successful login
+        SecurityContextHolder.getContext().setAuthentication(authToken);
+
+        return ResponseEntity.ok(mapToAuthRelationDTO(user));
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpSession session) {
+        // Invalidate session and clear Spring Security context
+        session.invalidate();
+        SecurityContextHolder.clearContext();
+        return ResponseEntity.ok("Logged out successfully");
+    }
 
-    @PostMapping("/register")
-    public String register(@Valid RegisterRequest registerRequest, BindingResult bindingResult, Model model) {
-        if (bindingResult.hasErrors()) {
-            List<FieldError> errors = bindingResult.getFieldErrors();
-            StringBuilder errorMessage = new StringBuilder();
-            for (FieldError error : errors) {
-                errorMessage.append(error.getField())
-                        .append(": ")
-                        .append(error.getDefaultMessage())
-                        .append(" ");
-            }
-            model.addAttribute("error", errorMessage.toString());
-            return "register"; // Return to register page with error message
+    @GetMapping("/me")
+    public ResponseEntity<?> currentUser(HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            return ResponseEntity.status(401).body("Not logged in");
         }
+        return ResponseEntity.ok(mapToAuthRelationDTO(user));
+    }
 
-        if (userRepository.existsByEmail(registerRequest.getEmail())) {
-            model.addAttribute("error", "Email already in use");
-            return "register"; // Return to register page with email in use error
-        }
-
-        // Save user after registration
-        User user = new User();
-        user.setEmail(registerRequest.getEmail());
-        user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
-        user.setUsername(registerRequest.getFullName());
-        userRepository.save(user);
-
-        // Redirect to login page after successful registration
-        return "redirect:/auth/login";
+    private AuthRelationDTO mapToAuthRelationDTO(User user) {
+        AuthRelationDTO dto = new AuthRelationDTO();
+        dto.setId(user.getId());
+        dto.setUsername(user.getUsername());
+        dto.setEmail(user.getEmail());
+        return dto;
     }
 }

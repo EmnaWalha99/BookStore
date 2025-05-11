@@ -1,6 +1,5 @@
 package com.example.Bookstore.services;
 
-import com.example.Bookstore.dto.CartDto;
 import com.example.Bookstore.models.Book;
 import com.example.Bookstore.models.Cart;
 import com.example.Bookstore.models.CartItem;
@@ -12,15 +11,16 @@ import com.example.Bookstore.repositories.UserRepository;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.boot.autoconfigure.AutoConfigureOrder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
+//@RequiredArgsConstructor
 public class CartServiceImplementation implements CartService {
     @Autowired
     private  UserRepository userRepository;
@@ -28,18 +28,24 @@ public class CartServiceImplementation implements CartService {
     @Autowired
     private BookRepository bookRepository;
     @Autowired
-    private CartRepository cartRepository;
+    private  CartRepository cartRepository;
     @Autowired
-    private CartItemRepository cartItemRepository;
+    private  CartItemRepository cartItemRepository;
+
+    @Autowired
+    private  HttpSession session;
+
 
 
     private User getCurrentUser() {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Utilisateur non trouvé"));
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            throw new RuntimeException("Utilisateur non connecté");
+        }
+        return user;
     }
 
-
+    @Transactional
     public List<CartItem> addBookToCart(Long bookId) {
         User user = getCurrentUser();
         Book book = bookRepository.findById(bookId)
@@ -69,7 +75,6 @@ public class CartServiceImplementation implements CartService {
 
         cartItemRepository.save(item);
 
-        // Recalculer le prix total
         List<CartItem> items = cartItemRepository.findByCart(cart);
         cart.setTotalPrice(items.stream().mapToDouble(CartItem::getPrice).sum());
         cartRepository.save(cart);
@@ -77,14 +82,16 @@ public class CartServiceImplementation implements CartService {
         return items;
     }
 
-
     public List<CartItem> getCartItems() {
         User user = getCurrentUser();
-        Cart cart = cartRepository.findByUser(user)
-                .orElseThrow(() -> new RuntimeException("Panier non trouvé"));
+        Cart cart = cartRepository.findByUser(user).orElse(null);
+        if (cart == null) {
+            return new ArrayList<>();
+        }
         return cartItemRepository.findByCart(cart);
     }
 
+    @Transactional
     public boolean removeBookFromCart(Long bookId) {
         User user = getCurrentUser();
         Cart cart = cartRepository.findByUser(user)
@@ -97,30 +104,29 @@ public class CartServiceImplementation implements CartService {
 
         if (optionalItem.isPresent()) {
             cartItemRepository.delete(optionalItem.get());
-
-            // Recalculer le total
             List<CartItem> items = cartItemRepository.findByCart(cart);
             cart.setTotalPrice(items.stream().mapToDouble(CartItem::getPrice).sum());
             cartRepository.save(cart);
-
             return true;
         }
 
         return false;
     }
 
-
     public int getCartItemCount() {
         User user = getCurrentUser();
-        Cart cart = cartRepository.findByUser(user)
-                .orElseThrow(() -> new RuntimeException("Panier non trouvé"));
-
+        Cart cart = cartRepository.findByUser(user).orElse(null);
+        if (cart == null) {
+            return 0;
+        }
         return cartItemRepository.findByCart(cart)
                 .stream()
                 .mapToInt(CartItem::getQuantity)
                 .sum();
     }
-    public CartItem increaseBookQuantity(Long bookId, CartDto dto) {
+
+    @Transactional
+    public CartItem increaseBookQuantity(Long bookId) {
         User user = getCurrentUser();
         Cart cart = cartRepository.findByUser(user)
                 .orElseThrow(() -> new RuntimeException("Panier non trouvé"));
@@ -136,10 +142,11 @@ public class CartServiceImplementation implements CartService {
         cartItemRepository.save(item);
 
         updateCartTotal(cart);
-
         return item;
     }
-    public CartItem decreaseBookQuantity(Long bookId, CartDto dto) {
+
+    @Transactional
+    public CartItem decreaseBookQuantity(Long bookId) {
         User user = getCurrentUser();
         Cart cart = cartRepository.findByUser(user)
                 .orElseThrow(() -> new RuntimeException("Panier non trouvé"));
@@ -159,21 +166,19 @@ public class CartServiceImplementation implements CartService {
         }
 
         updateCartTotal(cart);
-
         return item;
     }
 
+    @Transactional
     public void clearCart() {
-        User user=getCurrentUser();
-        Cart cart= cartRepository.findByUser(user)
-                .orElseThrow(()-> new RuntimeException("Panier non trouvé"));
+        User user = getCurrentUser();
+        Cart cart = cartRepository.findByUser(user)
+                .orElseThrow(() -> new RuntimeException("Panier non trouvé"));
 
         List<CartItem> items = cartItemRepository.findByCart(cart);
         cartItemRepository.deleteAll(items);
         cart.setTotalPrice(0.0);
         cartRepository.save(cart);
-
-
     }
 
     private void updateCartTotal(Cart cart) {
@@ -181,12 +186,4 @@ public class CartServiceImplementation implements CartService {
         cart.setTotalPrice(items.stream().mapToDouble(CartItem::getPrice).sum());
         cartRepository.save(cart);
     }
-
-
-
-
-
-
-
-
 }

@@ -15,9 +15,9 @@ public interface CartService {
 
     int getCartItemCount();
 
-    CartItem increaseBookQuantity(Long bookId, CartDto dto);
+    CartItem increaseBookQuantity(Long bookId);
 
-    CartItem decreaseBookQuantity(Long bookId, CartDto dto);
+    CartItem decreaseBookQuantity(Long bookId);
 
     void clearCart();
 
